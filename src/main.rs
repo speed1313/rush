@@ -18,12 +18,27 @@ fn main() {
         let command = parts.next().unwrap();
         let args = parts;
 
-        let mut child = Command::new(command)
-            .args(args)
-            .spawn()
-            .unwrap();
+        match command {
+            "cd" => {
+                //argumentがなければデフォルトは'/'へ移動.
+                //peek() Returns a reference to the next() value without advancing the iterator.
+                // map_orで, argsがSomeなら関数適用, Noneなら"/".
+                let new_dir = args.peekable().peek().map_or("/", |x| *x);
+                let root = Path::new(new_dir);
+                if let Err(e) = env::set_current_dir(&root){
+                    eprintln!("{}",e);
+                }
+            },
+            // spawn()でプロセスを生成する.
+            command => {
+                let mut child = Command::new(command)
+                    .args(args)
+                    .spawn()
+                    .unwrap();
+                // wait a child process if this process bear it.
+                child.wait();
+            }
+        }
 
-        // wait a child process if this process bear it.
-        child.wait();
     }
 }
